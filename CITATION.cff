@@ -9,7 +9,7 @@ authors:
 version: 1.0.0
 date-released: 2026-09-30
 license: MIT
-repository-code: "https://github.com/YOUR-USERNAME/idle-escalation"
+repository-code: "https://github.com/Joseph-Brendan/idle-escalation.git"
 keywords:
   - interaction design
   - focus indicator

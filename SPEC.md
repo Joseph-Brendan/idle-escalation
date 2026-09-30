@@ -30,6 +30,7 @@ It does all of this without a popup, a sound, or a shake.
 
 People do not use products with their full attention. They use them in between other things.
 
+For example,
 A user opens your sign-up form on a laptop. They click the email field. Their phone lights up. They read the message, reply, and look back at the laptop a minute later. The page looks the same as it did before. Nothing tells them where they were. They scan the screen, lose a few seconds, and sometimes lose the thread completely and leave.
 
 A second user never looks away. They click the field and freeze. Their eyes rest on the screen, but their mind has drifted, or they are unsure what to enter. The field waits, silent and unchanged, and nothing on the page invites them back.
