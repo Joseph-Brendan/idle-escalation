@@ -1,0 +1,87 @@
+/*!
+ * Idle Escalation v1.0.0 | MIT License
+ * Created by Joseph Brendan, Dev and Design HQ.
+ *
+ * Phase 1 (color): four tones, from soft to full primary color.
+ * Phase 2 (width): the outline thickens by 0.5px per step, set by the script
+ * through --ie-width-added.
+ *
+ * Swap the four tones for your own primary palette.
+ * Rule: step 1 must reach at least 3:1 contrast against the page
+ * background. Each later step must be stronger than the one before.
+ */
+:root {
+  --ie-step-1: #8a85f0;  /* soft start, 3.1:1 on white */
+  --ie-step-2: #6b63eb;  /* 4.6:1 */
+  --ie-step-3: #5b52e8;  /* 5.5:1 */
+  --ie-step-4: #4f46e5;  /* full color, 6.3:1 */
+  --ie-halo: rgba(79, 70, 229, 0.18);
+  --ie-ring-width: 2px;   /* starting width; phase 2 adds up to 2px more */
+  --ie-ring-offset: 2px;
+  --ie-ease: 400ms ease-out;
+}
+
+/* On dark surfaces, "stronger" means brighter, not deeper. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ie-step-1: #6b63eb;
+    --ie-step-2: #8a85f0;
+    --ie-step-3: #a9a5f5;
+    --ie-step-4: #c7c4fa;
+    --ie-halo: rgba(199, 196, 250, 0.2);
+  }
+}
+:root[data-theme="dark"] {
+  --ie-step-1: #6b63eb;
+  --ie-step-2: #8a85f0;
+  --ie-step-3: #a9a5f5;
+  --ie-step-4: #c7c4fa;
+  --ie-halo: rgba(199, 196, 250, 0.2);
+}
+
+[data-idle-escalation] {
+  transition: outline-color var(--ie-ease), outline-width var(--ie-ease), box-shadow var(--ie-ease);
+}
+
+/* An outline never changes the field's size, so nothing on the page moves. */
+[data-idle-escalation]:focus {
+  outline-style: solid;
+  outline-color: var(--ie-step-1);
+  outline-width: calc(var(--ie-ring-width) + var(--ie-width-added, 0px));
+  outline-offset: var(--ie-ring-offset);
+}
+
+[data-idle-escalation][data-ie-step="2"]:focus { outline-color: var(--ie-step-2); }
+[data-idle-escalation][data-ie-step="3"]:focus { outline-color: var(--ie-step-3); }
+[data-idle-escalation][data-ie-step="4"]:focus,
+[data-idle-escalation][data-ie-phase="width"]:focus { outline-color: var(--ie-step-4); }
+
+/* Optional halo that grows with each color step. Add class "ie-halo" to the field. */
+.ie-halo[data-ie-step="2"]:focus { box-shadow: 0 0 0 2px var(--ie-halo); }
+.ie-halo[data-ie-step="3"]:focus { box-shadow: 0 0 0 4px var(--ie-halo); }
+.ie-halo[data-ie-step="4"]:focus { box-shadow: 0 0 0 7px var(--ie-halo); }
+
+/* Hint text: always read by screen readers through aria-describedby,
+   shown on screen only when the ring reaches its peak. */
+.ie-hint:not(.ie-hint--shown) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-idle-escalation] { transition: none; }
+}
+
+/* Windows High Contrast and other forced color modes:
+   hand the color back to the system. The width phase still applies. */
+@media (forced-colors: active) {
+  [data-idle-escalation]:focus,
+  [data-idle-escalation][data-ie-step]:focus {
+    outline-color: Highlight;
+    box-shadow: none;
+  }
+}

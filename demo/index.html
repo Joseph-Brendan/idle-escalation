@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Idle Escalation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="../src/idle-escalation.css">
+<style>
+/* Layout: a working form on the left, the live two-phase readout and settings on the right; stacks on phones. */
+:root {
+  --bg: #f5f5fa;
+  --surface: #ffffff;
+  --fg: #16162b;
+  --muted: #5d5d77;
+  --line: #d6d6e5;
+  --accent: #4f46e5;
+  --field-border: #b9b9cc;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1017; --surface: #171826; --fg: #ececf6; --muted: #a2a2bc;
+    --line: #2c2d42; --accent: #a9a5f5; --field-border: #4a4b66; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1017; --surface: #171826; --fg: #ececf6; --muted: #a2a2bc;
+  --line: #2c2d42; --accent: #a9a5f5; --field-border: #4a4b66; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--body); }
+.wrap { max-width: 1060px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 56px; display: grid; gap: 32px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 700 clamp(34px, 6vw, 52px)/1.02 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); font-size: 17px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: grid; gap: 20px; min-width: 0; }
+h2 { font: 600 13px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.fields { display: grid; gap: 20px; }
+.field { display: grid; gap: 6px; }
+label { font-weight: 600; font-size: 14px; }
+input[type="text"], input[type="email"], input[type="tel"] {
+  font: 400 16px/1.3 var(--body); color: var(--fg); background: var(--surface);
+  border: 1px solid var(--field-border); border-radius: 8px; padding: 11px 12px; width: 100%;
+}
+.plain:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.ie-hint { font-size: 13px; color: var(--accent); margin: 0; }
+.divider { border: 0; border-top: 1px dashed var(--line); margin: 0; }
+.phase { display: grid; gap: 8px; }
+.phase-label { font: 500 12px/1.3 var(--mono); color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.meter { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.cell { display: grid; gap: 6px; }
+.cell span { font: 500 11px/1.2 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.swatch { height: 30px; border-radius: 7px; opacity: .3; transition: opacity 300ms ease-out, transform 300ms ease-out; }
+.cell.on .swatch, .cell.on .bar { opacity: 1; }
+.cell.now .swatch, .cell.now .bar { transform: translateY(-3px); }
+.s1 { background: var(--ie-step-1); } .s2 { background: var(--ie-step-2); }
+.s3 { background: var(--ie-step-3); } .s4 { background: var(--ie-step-4); }
+.bar { height: 30px; border-radius: 7px; border: 0 solid var(--ie-step-4); background: transparent; opacity: .3; transition: opacity 300ms ease-out, transform 300ms ease-out; }
+.w1 { border-width: 2.5px; } .w2 { border-width: 3px; } .w3 { border-width: 3.5px; } .w4 { border-width: 4px; }
+.readout { font: 500 14px/1.4 var(--mono); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.readout b { font-weight: 500; color: var(--accent); }
+.control { display: grid; gap: 6px; }
+.row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.row output { font: 500 14px/1 var(--mono); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; font-weight: 400; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.check input:focus-visible, input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.who { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 28px; }
+.who div { display: grid; gap: 4px; min-width: 0; }
+.who strong, .rules strong { font: 600 16px/1.3 var(--display); }
+.who span, .rules span { color: var(--muted); font-size: 14px; }
+.timeline { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 12px/1.3 var(--mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chip { display: inline-block; font: 500 11px/1 var(--mono); padding: 4px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.chip.width { border-color: var(--accent); color: var(--accent); }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px 28px; margin: 0; padding: 0; list-style: none; }
+.rules li { display: grid; gap: 4px; min-width: 0; }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Interaction pattern · v1.0</div>
+    <h1>Idle Escalation</h1>
+    <p class="lede">Click a field and wait. The focus ring starts as a soft tone and deepens every two seconds. At full color it starts to thicken, half a pixel at a time. Type anything and it goes back to calm.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="try-h">
+      <h2 id="try-h">Try it</h2>
+      <form id="demo-form" novalidate>
+        <div class="fields">
+          <div class="field">
+            <label for="f-name">Full name</label>
+            <input id="f-name" type="text" autocomplete="name" data-idle-escalation data-ie-hint="h-name" aria-describedby="h-name">
+            <p id="h-name" class="ie-hint">Your name as it appears on your ID.</p>
+          </div>
+          <div class="field">
+            <label for="f-email">Email address</label>
+            <input id="f-email" type="email" autocomplete="email" data-idle-escalation data-ie-hint="h-email" aria-describedby="h-email">
+            <p id="h-email" class="ie-hint">Example: ada@example.com</p>
+          </div>
+          <div class="field">
+            <label for="f-phone">Phone number</label>
+            <input id="f-phone" type="tel" autocomplete="tel" data-idle-escalation data-ie-hint="h-phone" aria-describedby="h-phone">
+            <p id="h-phone" class="ie-hint">Include your country code, like +234.</p>
+          </div>
+          <hr class="divider">
+          <div class="field">
+            <label for="f-plain">Standard focus, for comparison</label>
+            <input id="f-plain" type="text" class="plain">
+            <p class="note">This field uses a normal, fixed focus ring.</p>
+          </div>
+          <p class="note">Tip: click a field, then switch to another tab or app and come back. The ring waits at full color to show where you were.</p>
+        </div>
+      </form>
+    </section>
+
+    <aside class="panel" aria-labelledby="live-h">
+      <h2 id="live-h">Live ring</h2>
+      <div class="phase" aria-hidden="true">
+        <div class="phase-label"><span>Phase 1 · Color</span><span>0 to 6 s</span></div>
+        <div class="meter" id="m-color">
+          <div class="cell"><div class="swatch s1"></div><span>0 s</span></div>
+          <div class="cell"><div class="swatch s2"></div><span>2 s</span></div>
+          <div class="cell"><div class="swatch s3"></div><span>4 s</span></div>
+          <div class="cell"><div class="swatch s4"></div><span>6 s</span></div>
+        </div>
+      </div>
+      <div class="phase" aria-hidden="true">
+        <div class="phase-label"><span>Phase 2 · Width</span><span>8 to 14 s</span></div>
+        <div class="meter" id="m-width">
+          <div class="cell"><div class="bar w1"></div><span id="wl1">+0.5 px</span></div>
+          <div class="cell"><div class="bar w2"></div><span id="wl2">+1.0 px</span></div>
+          <div class="cell"><div class="bar w3"></div><span id="wl3">+1.5 px</span></div>
+          <div class="cell"><div class="bar w4"></div><span id="wl4">+2.0 px</span></div>
+        </div>
+      </div>
+      <div class="readout" aria-live="off">
+        <div>Field: <b id="r-field">none</b></div>
+        <div>Step: <b id="r-step">0</b> of 8</div>
+        <div>Ring: <b id="r-width">2.0</b>px</div>
+        <div>Idle: <b id="r-idle">0.0</b>s</div>
+      </div>
+      <hr class="divider">
+      <h2>Settings</h2>
+      <div class="control">
+        <div class="row"><label for="c-delay">Time between steps</label><output id="o-delay" for="c-delay">2.0 s</output></div>
+        <input id="c-delay" type="range" min="1" max="5" step="0.5" value="2">
+      </div>
+      <div class="control">
+        <div class="row"><label for="c-inc">Width added per step</label><output id="o-inc" for="c-inc">0.50 px</output></div>
+        <input id="c-inc" type="range" min="0.25" max="1" step="0.25" value="0.5">
+      </div>
+      <label class="check" for="c-hint"><input id="c-hint" type="checkbox" checked> Show the hint text at the peak</label>
+      <label class="check" for="c-return"><input id="c-return" type="checkbox" checked> Jump to full color when you come back from another tab or app</label>
+      <label class="check" for="c-halo"><input id="c-halo" type="checkbox"> Add a soft halo during the color phase</label>
+      <label class="check" for="c-pause"><input id="c-pause" type="checkbox"> Also escalate after a pause mid-typing</label>
+    </aside>
+  </div>
+
+  <section class="panel" aria-labelledby="who-h">
+    <h2 id="who-h">Who it helps</h2>
+    <div class="who">
+      <div><strong>People who freeze or stare</strong><span>The ring grows until it catches the eye, pulling attention back to the field so the user can start typing.</span></div>
+      <div><strong>People who look away</strong><span>After a phone check, another tab or another window, the ring marks the exact spot. No scrolling. No searching.</span></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="time-h">
+    <h2 id="time-h">Timeline at default settings</h2>
+    <div class="timeline">
+      <table>
+        <thead><tr><th>Idle time</th><th>Step</th><th>Phase</th><th>Ring</th></tr></thead>
+        <tbody>
+          <tr><td class="num">0 s</td><td class="num">1</td><td><span class="chip">Color</span></td><td>Soft tone, 2 px</td></tr>
+          <tr><td class="num">2 s</td><td class="num">2</td><td><span class="chip">Color</span></td><td>Stronger tone, 2 px</td></tr>
+          <tr><td class="num">4 s</td><td class="num">3</td><td><span class="chip">Color</span></td><td>Stronger again, 2 px</td></tr>
+          <tr><td class="num">6 s</td><td class="num">4</td><td><span class="chip">Color</span></td><td>Full primary color, 2 px</td></tr>
+          <tr><td class="num">8 s</td><td class="num">5</td><td><span class="chip width">Width</span></td><td>Full color, 2.5 px</td></tr>
+          <tr><td class="num">10 s</td><td class="num">6</td><td><span class="chip width">Width</span></td><td>Full color, 3 px</td></tr>
+          <tr><td class="num">12 s</td><td class="num">7</td><td><span class="chip width">Width</span></td><td>Full color, 3.5 px</td></tr>
+          <tr><td class="num">14 s</td><td class="num">8</td><td><span class="chip width">Width</span></td><td>Full color, 4 px, hint shows. Holds here.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="rules-h">
+    <h2 id="rules-h">How it behaves</h2>
+    <ul class="rules">
+      <li><strong>Soft start</strong><span>Step 1 already meets 3:1 contrast. Focus is always visible.</span></li>
+      <li><strong>Color, then width</strong><span>The tone deepens first. Once it is full, the outline thickens by 0.5 px per step.</span></li>
+      <li><strong>Holds at the peak</strong><span>No loops, blinking or pulsing. It stops at 4 px and waits.</span></li>
+      <li><strong>Calm on activity</strong><span>Any keystroke sends the ring back to step 1 at 2 px.</span></li>
+      <li><strong>Nothing moves</strong><span>The ring is an outline, so the field and the page never shift.</span></li>
+      <li><strong>Respects settings</strong><span>No easing under reduced motion. System colors in forced-color mode.</span></li>
+    </ul>
+  </section>
+
+  <footer>Idle Escalation is an open interaction pattern created by Joseph Brendan, Dev and Design HQ, 2026. Released under the MIT License.</footer>
+</div>
+
+<script src="../src/idle-escalation.js"></script>
+<script>
+(function () {
+  var instances = [];
+  var colorCells = document.querySelectorAll('#m-color .cell');
+  var widthCells = document.querySelectorAll('#m-width .cell');
+  var rField = document.getElementById('r-field');
+  var rStep = document.getElementById('r-step');
+  var rWidth = document.getElementById('r-width');
+  var rIdle = document.getElementById('r-idle');
+  var delay = document.getElementById('c-delay');
+  var inc = document.getElementById('c-inc');
+  var oDelay = document.getElementById('o-delay');
+  var oInc = document.getElementById('o-inc');
+  var halo = document.getElementById('c-halo');
+  var hint = document.getElementById('c-hint');
+  var ret = document.getElementById('c-return');
+  var pause = document.getElementById('c-pause');
+  var fields = document.querySelectorAll('[data-idle-escalation]');
+  var idleStart = 0, raf = 0;
+
+  function paint(d) {
+    var colorStep = Math.min(d.step, 4), widthStep = Math.max(0, d.step - 4);
+    colorCells.forEach(function (c, i) {
+      c.classList.toggle('on', i < colorStep);
+      c.classList.toggle('now', d.step <= 4 && i === colorStep - 1);
+    });
+    widthCells.forEach(function (c, i) {
+      c.classList.toggle('on', i < widthStep);
+      c.classList.toggle('now', i === widthStep - 1);
+    });
+    rStep.textContent = d.step;
+    rWidth.textContent = (2 + (d.widthAdded || 0)).toFixed(1);
+  }
+  function tick() {
+    rIdle.textContent = ((performance.now() - idleStart) / 1000).toFixed(1);
+    raf = requestAnimationFrame(tick);
+  }
+  function labels() {
+    var v = parseFloat(inc.value);
+    for (var i = 1; i <= 4; i++) document.getElementById('wl' + i).textContent = '+' + (v * i).toFixed(2).replace(/0$/, '') + ' px';
+  }
+  function build() {
+    instances.forEach(function (i) { i.destroy(); });
+    fields.forEach(function (el) {
+      el.classList.toggle('ie-halo', halo.checked);
+      if (hint.checked) el.dataset.ieHint = el.getAttribute('aria-describedby');
+      else delete el.dataset.ieHint;
+    });
+    document.querySelectorAll('.ie-hint').forEach(function (h) { h.classList.remove('ie-hint--shown'); });
+    instances = IdleEscalation.init(document, {
+      delay: parseFloat(delay.value) * 1000,
+      widthIncrement: parseFloat(inc.value),
+      returnBoost: ret.checked,
+      watchPauses: pause.checked
+    });
+  }
+
+  fields.forEach(function (el) {
+    el.addEventListener('idleescalation:step', function (e) {
+      paint(e.detail);
+      if (e.detail.step === 1 && !el.value) { idleStart = performance.now(); }
+    });
+    el.addEventListener('focus', function () {
+      rField.textContent = el.labels[0].textContent;
+      cancelAnimationFrame(raf); tick();
+    });
+    el.addEventListener('input', function () { idleStart = performance.now(); });
+    el.addEventListener('blur', function () {
+      cancelAnimationFrame(raf);
+      setTimeout(function () {
+        if (!el._idleEscalation || el._idleEscalation.step === 0) {
+          rField.textContent = 'none'; rIdle.textContent = '0.0'; paint({ step: 0, widthAdded: 0 });
+        }
+      }, 0);
+    });
+  });
+
+  delay.addEventListener('input', function () {
+    oDelay.textContent = parseFloat(delay.value).toFixed(1) + ' s'; build();
+  });
+  inc.addEventListener('input', function () {
+    oInc.textContent = parseFloat(inc.value).toFixed(2) + ' px'; labels(); build();
+  });
+  [halo, hint, ret, pause].forEach(function (c) { c.addEventListener('change', build); });
+  document.getElementById('demo-form').addEventListener('submit', function (e) { e.preventDefault(); });
+
+  labels();
+  build();
+})();
+</script>
+</body>
+</html>

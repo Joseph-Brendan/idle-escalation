@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use or write about this pattern, please cite it as below."
+title: "Idle Escalation: a focus indicator that strengthens while a field sits idle"
+type: software
+authors:
+  - family-names: Brendan
+    given-names: Joseph
+    affiliation: "Dev and Design HQ"
+version: 1.0.0
+date-released: 2026-09-30
+license: MIT
+repository-code: "https://github.com/YOUR-USERNAME/idle-escalation"
+keywords:
+  - interaction design
+  - focus indicator
+  - accessibility
+  - attention
+  - forms
