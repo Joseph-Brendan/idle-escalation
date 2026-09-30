@@ -5,8 +5,8 @@
 **Author and originator:** Joseph Brendan, Founder, Dev and Design HQ
 **Contact:** devdesignhq.com
 **Date of first public disclosure:** 30th September 2026
-**Public repository:** https://github.com/YOUR-USERNAME/idle-escalation
-**Archive DOI:** [ADD ZENODO DOI]
+**Public repository:** https://github.com/Joseph-Brendan/idle-escalation.git
+**Archive DOI:** 10.5281/zenodo.23066053
 
 **Purpose of this document:** This document publicly discloses the technique described below so that it enters the prior art. The author intends the technique to remain free for anyone to use and publishes it to prevent any party from obtaining a patent on it or on obvious variations of it.
 
