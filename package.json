@@ -1,0 +1,52 @@
+{
+    "name": "idle-escalation",
+    "version": "1.0.0",
+    "description": "A focus ring that deepens in color, then thickens, while a focused field sits idle. Helps users who freeze re-focus and users who look away find their place.",
+    "main": "src/idle-escalation.js",
+    "types": "src/idle-escalation.d.ts",
+    "style": "src/idle-escalation.css",
+    "unpkg": "src/idle-escalation.js",
+    "jsdelivr": "src/idle-escalation.js",
+    "exports": {
+        ".": {
+            "types": "./src/idle-escalation.d.ts",
+            "default": "./src/idle-escalation.js"
+        },
+        "./style.css": "./src/idle-escalation.css",
+        "./package.json": "./package.json"
+    },
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "src/",
+        "SPEC.md",
+        "LICENSE",
+        "README.md"
+    ],
+    "keywords": [
+        "idle-escalation",
+        "focus",
+        "focus-ring",
+        "focus-indicator",
+        "accessibility",
+        "a11y",
+        "forms",
+        "input",
+        "ux",
+        "interaction-design"
+    ],
+    "author": "Joseph Brendan <learn@devdesignhq.com> (https://devdesignhq.com)",
+    "license": "MIT",
+    "homepage": "https://github.com/Joseph-Brendan/idle-escalation#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Joseph-Brendan/idle-escalation.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Joseph-Brendan/idle-escalation/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
