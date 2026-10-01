@@ -1,5 +1,7 @@
 # Idle Escalation
 
+[![npm](https://img.shields.io/npm/v/idle-escalation.svg)](https://www.npmjs.com/package/idle-escalation)
+
 **A focus ring that gets stronger the longer a field sits idle.**
 
 When a user clicks into a field and does not start typing, the focus ring starts as a light, soft tone of your primary color. Every 2 seconds it gains saturation until it reaches full color. If the user still has not typed, the outline then thickens by 0.5 px every 2 seconds, four times. The moment they type, it goes back to calm. No popups, sounds or shaking.
